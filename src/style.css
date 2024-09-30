@@ -1,0 +1,26 @@
+body, h1, h2, ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+}
+header {
+    background-color:transparent;
+    color: black;
+    padding: 15px 0;
+}
+.container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 80%;
+    margin: 0 auto;
+}
+.logo-wrap {
+    display: flex;
+    align-items: center;
+}
