@@ -1,33 +1,62 @@
 <?php
 session_start();
+require 'config.php';  
 
-// Inisialisasi daftar tugas dalam sesi
-if (!isset($_SESSION['tasks'])) {
-    $_SESSION['tasks'] = [];
-}
-
-// Menangani penghapusan tugas
+// Handle task deletion
 if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['id'])) {
-    unset($_SESSION['tasks'][$_GET['id']]);
+    $id = intval($_GET['id']);  // Pastikan id berupa integer
+    $stmt = $pdo->prepare("DELETE FROM tugas WHERE id = :id");
+    $stmt->execute(['id' => $id]);
 }
 
-// Menangani penambahan tugas
+// Handle task addition
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_task'])) {
-    $task = htmlspecialchars($_POST['task']);
-    $priority = htmlspecialchars($_POST['priority']);
-    if (!empty($task)) {
-        $_SESSION['tasks'][] = ['task' => $task, 'priority' => $priority];
+    $nama = htmlspecialchars($_POST['task']);
+    $deskripsi = htmlspecialchars($_POST['deskripsi']);
+    $tanggal = htmlspecialchars($_POST['due_date']);
+    $jam = htmlspecialchars($_POST['due_time']);
+    $prioritas = htmlspecialchars($_POST['priority']);
+    $kategori = htmlspecialchars($_POST['kategori']);
+
+    if (!empty($nama)) {
+        $stmt = $pdo->prepare("INSERT INTO tugas (nama, deskripsi, tanggal, jam, prioritas, kategori) VALUES (:nama, :deskripsi, :tanggal, :jam, :prioritas, :kategori)");
+        $stmt->execute([
+            'nama' => $nama,
+            'deskripsi' => $deskripsi,
+            'tanggal' => $tanggal,
+            'jam' => $jam,
+            'prioritas' => $prioritas,
+            'kategori' => $kategori
+        ]);
     }
 }
 
-// Menangani pembaruan tugas
+// Handle task update
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_task'])) {
-    $id = $_POST['id'];
-    $task = htmlspecialchars($_POST['task']);
-    $priority = htmlspecialchars($_POST['priority']);
-    $_SESSION['tasks'][$id] = ['task' => $task, 'priority' => $priority];
+    $id = intval($_POST['id']);
+    $nama = htmlspecialchars($_POST['task']);
+    $deskripsi = htmlspecialchars($_POST['deskripsi']);
+    $tanggal = htmlspecialchars($_POST['due_date']);
+    $jam = htmlspecialchars($_POST['due_time']);
+    $prioritas = htmlspecialchars($_POST['priority']);
+    $kategori = htmlspecialchars($_POST['kategori']);
+
+    if (!empty($id)) {
+        $stmt = $pdo->prepare("UPDATE tugas SET nama = :nama, deskripsi = :deskripsi, tanggal = :tanggal, jam = :jam, prioritas = :prioritas, kategori = :kategori WHERE id = :id");
+        $stmt->execute([
+            'id' => $id,
+            'nama' => $nama,
+            'deskripsi' => $deskripsi,
+            'tanggal' => $tanggal,
+            'jam' => $jam,
+            'prioritas' => $prioritas,
+            'kategori' => $kategori
+        ]);
+    }
 }
 
+// Fetch all tasks from database
+$tasks = $pdo->query("SELECT * FROM tugas ORDER BY tanggal, jam")->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -46,13 +75,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_task'])) {
                 <img src="../image/logo.png" alt="logo" width="40">
                 <h1>My TodoList</h1>
             </div>
-            <div class="navmenu">
-                <a href="#beranda">Beranda</a>
-                <a href="#kontak">Kontak</a>
-                <a href="#kontak">
-                    <img src="../image/profile.png" alt="profile" width="40">
-                </a>
-            </div>
+            <nav class="navmenu">
+                <ul>
+                    <li><a href="#beranda">Beranda</a></li>
+                    <li><a href="#kontak">Kontak</a></li>
+                    <li><a href="#beranda">
+                        <img src="../image/profile.png" alt="profile" width="40">
+                    </a></li>
+                </ul>
+            </nav>
         </div>
     </header>
 
@@ -71,12 +102,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_task'])) {
         <div>
             <form method="POST">
                 <input type="text" name="task" id="inputTugas" placeholder="Tambahkan Tugas" required>
+                <textarea name="deskripsi" placeholder="Deskripsi Tugas"></textarea>
                 <select name="priority" required>
                     <option value="">Pilih Prioritas</option>
-                    <option value="High">Tinggi</option>
-                    <option value="Medium">Sedang</option>
-                    <option value="Low">Rendah</option>
+                    <option value="Tinggi">Tinggi</option>
+                    <option value="Sedang">Sedang</option>
+                    <option value="Rendah">Rendah</option>
                 </select>
+                <input type="date" name="due_date" required>
+                <input type="time" name="due_time" required>
+                <input type="text" name="kategori" placeholder="Kategori Tugas" required>
+
                 <button type="submit" name="add_task">➕</button>
             </form>
         </div>
@@ -84,11 +120,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_task'])) {
         <div class="daftar-tugas">
             <h2>Tugasku</h2>
             <ul id="daftarTugas">
-                <?php foreach ($_SESSION['tasks'] as $id => $task): ?>
+                <?php foreach ($tasks as $task): ?>
                     <li>
-                        <?php echo htmlspecialchars($task['task']) . " (Prioritas: " . htmlspecialchars($task['priority']) . ")"; ?>
-                        <a href="edit_task.php?id=<?php echo $id; ?>">✏️ Edit</a>
-                        <a href="?action=delete&id=<?php echo $id; ?>">❌ Hapus</a>
+                        <?php echo htmlspecialchars($task['nama']) . " (Prioritas: " . htmlspecialchars($task['prioritas']) . ", Tanggal: " . htmlspecialchars($task['tanggal']) . ", Jam: " . htmlspecialchars($task['jam']) . ", Kategori: " . htmlspecialchars($task['kategori']) . ")"; ?>
+                        <a href="edit.php?id=<?php echo $task['id']; ?>">✏️ Edit</a>
+                        <a href="?action=delete&id=<?php echo $task['id']; ?>">❌ Hapus</a>
                     </li>
                 <?php endforeach; ?>
             </ul>

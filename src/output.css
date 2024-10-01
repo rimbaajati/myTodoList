@@ -616,6 +616,14 @@ video {
   display: none;
 }
 
+.w-7 {
+  width: 1.75rem;
+}
+
+.w-9 {
+  width: 2.25rem;
+}
+
 .border-collapse {
   border-collapse: collapse;
 }
@@ -638,4 +646,12 @@ video {
 
 .outline {
   outline-style: solid;
+}
+
+.\[j\:Z\FFFD\FFFD A\FFFDqut\1C\] {
+  j: Z��A�qut;
+}
+
+.\[w\:R\FFFD-\] {
+  w: R�-;
 }
